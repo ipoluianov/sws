@@ -235,7 +235,7 @@ func (c *HttpServer) file(w http.ResponseWriter, r *http.Request, urlPath string
 		urlPath = "/index.html"
 	}
 
-	var gitPullResult string
+	/*var gitPullResult string
 	gitPullResult, err = c.gitPull(urlPath, r.Host)
 	if err != nil {
 		errorResult := "--->"
@@ -252,7 +252,7 @@ func (c *HttpServer) file(w http.ResponseWriter, r *http.Request, urlPath string
 		_, _ = w.Write([]byte(gitPullResult))
 		w.WriteHeader(200)
 		return
-	}
+	}*/
 
 	url, err := c.fullpath(urlPath, r.Host)
 
