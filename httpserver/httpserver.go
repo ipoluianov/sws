@@ -228,7 +228,19 @@ func (c *HttpServer) file(w http.ResponseWriter, r *http.Request, urlPath string
 		urlPath = "/index.html"
 	}
 
-	c.gitPull(urlPath, r.Host)
+	var gutPullResult string
+	gutPullResult, err = c.gitPull(urlPath, r.Host)
+	if err != nil {
+		_, _ = w.Write([]byte(err.Error()))
+		w.WriteHeader(404)
+		return
+	}
+
+	if len(gutPullResult) > 0 {
+		_, _ = w.Write([]byte(gutPullResult))
+		w.WriteHeader(200)
+		return
+	}
 
 	url, err := c.fullpath(urlPath, r.Host)
 
