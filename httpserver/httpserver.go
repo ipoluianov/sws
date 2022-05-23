@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -176,6 +177,37 @@ func (c *HttpServer) processFile(w http.ResponseWriter, r *http.Request) {
 	c.file(w, r, r.URL.Path)
 }
 
+func (c *HttpServer) gitPull(url string, host string) (string, error) {
+	if !strings.HasSuffix(url, "-update") {
+		return "", nil
+	}
+
+	pathToWWW := ""
+	pathToWWW = c.rootPath + "/" + host + "/www/"
+
+	if strings.Contains(pathToWWW, "..") {
+		return "", nil
+	}
+
+	out, err := exec.Command("git", "-C", pathToWWW, "pull").Output()
+	return string(out), err
+}
+
+func (c *HttpServer) fullpath(url string, host string) (string, error) {
+	result := ""
+
+	result = c.rootPath + "/" + host + "/www/" + url
+
+	fi, err := os.Stat(result)
+	if err == nil {
+		if fi.IsDir() {
+			result += "/index.html"
+		}
+	}
+
+	return result, err
+}
+
 func (c *HttpServer) file(w http.ResponseWriter, r *http.Request, urlPath string) {
 	var err error
 	var fileContent []byte
@@ -196,9 +228,17 @@ func (c *HttpServer) file(w http.ResponseWriter, r *http.Request, urlPath string
 		urlPath = "/index.html"
 	}
 
+	c.gitPull(urlPath, r.Host)
+
 	url, err := c.fullpath(urlPath, r.Host)
 
 	logger.Println("FullPath: " + url)
+
+	if strings.Contains(url, "..") {
+		logger.Println("Wrong FullPath")
+		w.WriteHeader(404)
+		return
+	}
 
 	if err != nil {
 		w.WriteHeader(404)
@@ -269,21 +309,6 @@ func (c *HttpServer) sendError(w http.ResponseWriter, errorToSend error) {
 	if writtenBytes != len(b) {
 		logger.Println("HttpServer sendError w.Write data size mismatch. (", writtenBytes, " / ", len(b))
 	}
-}
-
-func (c *HttpServer) fullpath(url string, host string) (string, error) {
-	result := ""
-
-	result = c.rootPath + "/" + host + "/www/" + url
-
-	fi, err := os.Stat(result)
-	if err == nil {
-		if fi.IsDir() {
-			result += "/index.html"
-		}
-	}
-
-	return result, err
 }
 
 func (c *HttpServer) redirect(w http.ResponseWriter, r *http.Request, url string) {
