@@ -235,25 +235,6 @@ func (c *HttpServer) file(w http.ResponseWriter, r *http.Request, urlPath string
 		urlPath = "/index.html"
 	}
 
-	/*var gitPullResult string
-	gitPullResult, err = c.gitPull(urlPath, r.Host)
-	if err != nil {
-		errorResult := "--->"
-		errorResult += gitPullResult
-		errorResult += "\r\n"
-		errorResult += err.Error()
-
-		_, _ = w.Write([]byte(errorResult))
-		w.WriteHeader(404)
-		return
-	}
-
-	if len(gitPullResult) > 0 {
-		_, _ = w.Write([]byte(gitPullResult))
-		w.WriteHeader(200)
-		return
-	}*/
-
 	url, err := c.fullpath(urlPath, r.Host)
 
 	logger.Println("FullPath: " + url)
@@ -270,10 +251,22 @@ func (c *HttpServer) file(w http.ResponseWriter, r *http.Request, urlPath string
 	}
 
 	fileContent, err = ioutil.ReadFile(url)
+	isMD := false
+	if err != nil {
+		fileContent, err = ioutil.ReadFile(strings.ReplaceAll(url, "index.html", "index.md"))
+		if err == nil {
+			isMD = true
+		}
+	}
 
 	ext := filepath.Ext(url)
 	if ext == ".html" {
-		fileContent = c.processTemplate(fileContent, r.Host)
+		if isMD {
+			//fileContent = c.processTemplateMD(fileContent, r.Host)
+		} else {
+			fileContent = c.processTemplate(fileContent, r.Host)
+		}
+
 	}
 
 	if err == nil {
