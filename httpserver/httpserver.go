@@ -178,6 +178,8 @@ func (c *HttpServer) processFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *HttpServer) gitPull(url string, host string) (string, error) {
+	result := ""
+
 	if !strings.HasSuffix(url, "-update") {
 		return "", nil
 	}
@@ -189,8 +191,13 @@ func (c *HttpServer) gitPull(url string, host string) (string, error) {
 		return "", nil
 	}
 
+	result += "git -C " + pathToWWW + " pull"
+	result += "\r\n"
+
 	out, err := exec.Command("git", "-C", pathToWWW, "pull").Output()
-	return string(out), err
+	result += string(out)
+	result += "\r\n"
+	return result, err
 }
 
 func (c *HttpServer) fullpath(url string, host string) (string, error) {
