@@ -4,8 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"github.com/gazercloud/sws/logger"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -16,6 +14,9 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/gazercloud/sws/logger"
+	"github.com/gorilla/mux"
 )
 
 type Host struct {
@@ -174,6 +175,13 @@ func (c *HttpServer) contentTypeByExt(ext string) string {
 }
 
 func (c *HttpServer) processFile(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == "OPTIONS" {
+		w.Header().Set("Access-Control-Request-Method", "GET")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		return
+	}
+
 	c.file(w, r, r.URL.Path)
 }
 
