@@ -70,6 +70,13 @@ func (c *HttpServer) thListen() {
 func (c *HttpServer) processHTTP(w http.ResponseWriter, r *http.Request) {
 	logger.Println("ProcessHTTP host: ", r.Host)
 	if _, ok := c.hostsWithSSL[r.Host]; ok {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		if r.Method == "OPTIONS" {
+			w.Header().Set("Access-Control-Request-Method", "GET")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			return
+		}
+
 		http.Redirect(w, r, "https://"+r.Host+r.RequestURI, http.StatusMovedPermanently)
 	}
 	c.processFile(w, r)
